@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const tempMovieData = [
   {
@@ -50,55 +50,9 @@ const tempWatchedData = [
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
-const KEY = "7383bbeb";
-const query = "interstellar";
-
 export default function App() {
-  const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  // Render Logic Error
-  /*
-    fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-    .then((res) => res.json())
-    .then((data) => console.log(data.Search));
-    */
-
-  // this will mounted when the component is rendered or painted on the screen
-
-  /*
-  useEffect(function () {
-    fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
-      .then((res) => res.json())
-      .then((data) => setMovies(data.Search));
-  }, []);
-  */
-
-  useEffect(function () {
-    async function getMovies() {
-      try {
-        setIsLoading(true);
-        const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}}`
-        );
-
-        if (!res.ok) throw new Error("Something went wrong");
-
-        const data = await res.json();
-        console.log(data);
-        if (data.Response === "False") throw new Error("No movies found");
-
-        setMovies(data.Search);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    getMovies();
-  }, []);
+  const [movies, setMovies] = useState(tempMovieData);
+  const [watched, setWatched] = useState(tempWatchedData);
 
   return (
     <>
@@ -111,9 +65,7 @@ export default function App() {
       </NavBar>
       <Main>
         <Box>
-          {isLoading && <Loader />}
-          {!isLoading && !error && <MovieList movies={movies} />}
-          {error && <ErrorMesssage message={error} />}
+          <MovieList movies={movies} />
         </Box>
         {/* <WatchedBox /> */}
 
@@ -134,22 +86,6 @@ export default function App() {
         /> */}
       </Main>
     </>
-  );
-}
-
-function Loader() {
-  return (
-    <div className="loader">
-      <p>Loading...</p>
-    </div>
-  );
-}
-
-function ErrorMesssage({ message }) {
-  return (
-    <div className="error">
-      <p>{message}</p>
-    </div>
   );
 }
 
@@ -332,5 +268,3 @@ function WatchedMovie({ movie }) {
     </li>
   );
 }
-
-//147
