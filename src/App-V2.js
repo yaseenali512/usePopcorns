@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import StarRating from "./StartRating";
 
 const average = (arr) =>
@@ -8,16 +8,30 @@ const KEY = "7383bbeb";
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  // const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(null);
 
-  const [watched, setWatched] = useState(function () {
-    const storedValue = JSON.parse(localStorage.getItem("watched"));
-    return storedValue;
-  });
+  // const tempQuery = "interstellar";
+
+  // Render Logic Error
+  /*
+    fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
+    .then((res) => res.json())
+    .then((data) => console.log(data.Search));
+    */
+
+  // this will mounted when the component is rendered or painted on the screen
+
+  /*
+  useEffect(function () {
+    fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=interstellar`)
+      .then((res) => res.json())
+      .then((data) => setMovies(data.Search));
+  }, []);
+  */
 
   function handleSelectMovie(id) {
     setSelectedId((selectedId) => (id === selectedId ? null : id));
@@ -31,16 +45,16 @@ export default function App() {
     setWatched((watched) => [...watched, movie]);
   }
 
+  // function handleDeleteWatched(id) {
+  //   setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
+  // }
+
+  // function handleDeleteWatched(id) {
+  //   setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
+  // }
   function handleDeleteWatched(id) {
     setWatched((watched) => watched.filter((movie) => movie.imdbID !== id));
   }
-
-  useEffect(
-    function () {
-      localStorage.setItem("watched", JSON.stringify(watched));
-    },
-    [watched]
-  );
 
   useEffect(
     function () {
@@ -89,6 +103,9 @@ export default function App() {
 
   return (
     <>
+      {/* Component Composition to solve Prop Drilling, Layout, and Resusable
+      Components  */}
+
       <NavBar>
         <Search query={query} setQuery={setQuery} />
         <NumResults movies={movies} />
@@ -121,6 +138,17 @@ export default function App() {
             </>
           )}
         </Box>
+
+        {/* we also can use it for explicit passing of props */}
+        {/* <Box element={<MovieList movies={movies} />} />
+        <Box
+          element={
+            <>
+              <WatchedSummary watched={watched} />
+              <WatchedMovieList watched={watched} />
+            </>
+          }
+        /> */}
       </Main>
     </>
   );
@@ -161,24 +189,6 @@ function Logo() {
 }
 
 function Search({ query, setQuery }) {
-  const inputEl = useRef(null);
-
-  useEffect(
-    function () {
-      function callback(e) {
-        if (document.activeElement === inputEl.current) return;
-        if (e.code === "Enter") {
-          inputEl.current.focus();
-          setQuery("");
-        }
-      }
-
-      document.addEventListener("keydown", callback);
-      return () => document.addEventListener("keydown", callback);
-    },
-    [setQuery]
-  );
-
   return (
     <input
       className="search"
@@ -186,7 +196,6 @@ function Search({ query, setQuery }) {
       placeholder="Search movies..."
       value={query}
       onChange={(e) => setQuery(e.target.value)}
-      ref={inputEl}
     />
   );
 }
@@ -202,6 +211,21 @@ function NumResults({ movies }) {
 function Main({ children }) {
   return <main className="main">{children}</main>;
 }
+
+/* function ListBox({ children }) {
+  const [isOpen1, setIsOpen1] = useState(true);
+  return (
+    <div className="box">
+      <button
+        className="btn-toggle"
+        onClick={() => setIsOpen1((open) => !open)}
+      >
+        {isOpen1 ? "–" : "+"}
+      </button>
+      {isOpen1 && children}
+    </div>
+  );
+} */
 
 function Box({ children }) {
   const [isOpen, setIsOpen] = useState(true);
@@ -240,6 +264,28 @@ function Movie({ movie, onSelectMovie }) {
   );
 }
 
+/* function WatchedBox() {
+  const [watched, setWatched] = useState(tempWatchedData);
+  const [isOpen2, setIsOpen2] = useState(true);
+
+  return (
+    <div className="box">
+      <button
+        className="btn-toggle"
+        onClick={() => setIsOpen2((open) => !open)}
+      >
+        {isOpen2 ? "–" : "+"}
+      </button>
+      {isOpen2 && (
+        <>
+          <WatchedSummary watched={watched} />
+          <WatchedMovieList watched={watched} />
+        </>
+      )}
+    </div>
+  );
+} */
+
 function MovieDetails({
   selectedId,
   onCloseMovie,
@@ -249,20 +295,10 @@ function MovieDetails({
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState(0);
-
   const isWatched = watched.map((movie) => movie.imdbID).includes(selectedId);
   const userWatchedMovie = watched.find(
     (movie) => movie.imdbID === selectedId
   )?.userRating;
-
-  const countRef = useRef(0);
-
-  useEffect(
-    function () {
-      if (userRating) countRef.current++;
-    },
-    [userRating]
-  );
 
   const {
     Title: title,
@@ -286,7 +322,6 @@ function MovieDetails({
       imdbRating: Number(imdbRating),
       runtime: Number(runtime.split(" ")[0]),
       userRating,
-      countRatingDecisions: countRef.current,
     };
 
     onAddWatchedMovie(newWatchedMovie);
